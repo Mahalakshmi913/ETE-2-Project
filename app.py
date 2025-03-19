@@ -57,7 +57,7 @@ if uploaded_file is not None:
         fill_color="rgba(255, 255, 255, 0.3)",  # Transparent white
         stroke_width=stroke_width,
         stroke_color=stroke_color,  # Mask color
-        background_image=image,
+        background_image=Image.fromarray(image_np),  # Convert to PIL Image
         update_streamlit=True,
         height=image_np.shape[0],
         width=image_np.shape[1],
