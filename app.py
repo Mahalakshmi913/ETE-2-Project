@@ -47,23 +47,31 @@ if uploaded_file is not None:
     # Convert HEX color to RGBA
     def hex_to_rgba(hex_color):
         hex_color = hex_color.lstrip("#")
-        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4)) + (255,)
+        r, g, b = (int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        return f"rgba({r}, {g}, {b}, 1.0)"  # Convert to valid RGBA format
 
     stroke_color_rgba = hex_to_rgba(stroke_color)
+
+    # Ensure the image is in RGB format (PIL expects RGB)
+    image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+
+    # Convert to PIL image (Ensures compatibility with st_canvas)
+    background_pil = Image.fromarray(image_rgb)
 
     # Streamlit Draw Canvas
     st.subheader("Draw over the damaged areas")
     canvas_result = st_canvas(
         fill_color="rgba(255, 255, 255, 0.3)",  # Transparent white
         stroke_width=stroke_width,
-        stroke_color=stroke_color,  # Mask color
-        background_image=Image.fromarray(image_np),  # Convert to PIL Image
+        stroke_color=stroke_color_rgba,  # Correct RGBA format
+        background_image=background_pil,  # Ensuring proper format
         update_streamlit=True,
         height=image_np.shape[0],
         width=image_np.shape[1],
         drawing_mode="freedraw",
         key="canvas",
     )
+
 
         # Process mask when user submits
     if st.button("Restore Image"):
