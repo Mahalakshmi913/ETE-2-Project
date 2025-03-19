@@ -47,24 +47,17 @@ if uploaded_file is not None:
     # Convert HEX color to RGBA
     def hex_to_rgba(hex_color):
         hex_color = hex_color.lstrip("#")
-        r, g, b = (int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        return f"rgba({r}, {g}, {b}, 1.0)"  # Convert to valid RGBA format
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4)) + (255,)
 
     stroke_color_rgba = hex_to_rgba(stroke_color)
-
-    # Ensure the image is in RGB format (PIL expects RGB)
-    image_rgb = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-
-    # Convert to PIL image (Ensures compatibility with st_canvas)
-    background_pil = Image.fromarray(image_rgb)
 
     # Streamlit Draw Canvas
     st.subheader("Draw over the damaged areas")
     canvas_result = st_canvas(
         fill_color="rgba(255, 255, 255, 0.3)",  # Transparent white
         stroke_width=stroke_width,
-        stroke_color=stroke_color_rgba,  # Correct RGBA format
-        background_image=background_pil,  # Ensuring proper format
+        stroke_color=stroke_color,  # Mask color
+        background_image=image,
         update_streamlit=True,
         height=image_np.shape[0],
         width=image_np.shape[1],
@@ -72,12 +65,13 @@ if uploaded_file is not None:
         key="canvas",
     )
 
-
-        # Process mask when user submits
+    # Process mask when user submits
     if st.button("Restore Image"):
         if canvas_result.image_data is not None:
             # Convert drawn mask to grayscale
-            mask = cv2.cvtColor(canvas_result.image_data, cv2.COLOR_RGBA2GRAY)
+            mask = np.array(canvas_result.image_data, dtype=np.uint8)  # Ensure uint8 format
+            mask = cv2.cvtColor(mask, cv2.COLOR_RGBA2GRAY)
+
 
             # Threshold the mask to ensure binary values (0 or 255)
             _, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
@@ -103,4 +97,4 @@ if uploaded_file is not None:
                 st.download_button("Download Restored Image", file, file_name="restored_image.png", mime="image/png")
 
     # Cleanup temp files
-    os.remove(temp_img_path)
+    os.remove(temp_img_path)  
