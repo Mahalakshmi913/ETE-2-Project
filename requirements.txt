@@ -1,5 +1,5 @@
 streamlit
-opencv-python
+opencv-python-headless==4.5.5.62
 numpy
 pillow
 streamlit-drawable-canvas==0.8.0
